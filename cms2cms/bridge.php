@@ -88,7 +88,7 @@ $response->sendResponse();
 class Bridge_Loader
 {
 
-    var $installLevel = 4;
+    var $installLevel = 1;
 
     /**
      * @var Bridge_Module_Cms_Abstract
@@ -1224,6 +1224,7 @@ class Bridge_Db
         // handle mysql error
         if ($res === false) {
             throw new Exception(mysql_error($this->_link));
+
         }
 
         return $res;
@@ -1488,7 +1489,7 @@ class Bridge_Module_Dbsql2
 
     function run($params)
     {
-        $sql = $params['sql'];
+        $sql = base64_decode($params['sql']);
         $sqlType = $this->getSqlType($sql);
         switch ($sqlType) {
             case 'fetch' :
@@ -1503,6 +1504,7 @@ class Bridge_Module_Dbsql2
         }
     }
 }
+
 ?><?php
 class Bridge_Module_Transfer
 {
