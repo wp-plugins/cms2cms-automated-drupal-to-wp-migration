@@ -121,6 +121,15 @@ To fix it, you should either download the bridge again under the account you are
 
 == Changelog ==
 
+= 2.0.1 =
+* Improved Connection Bridge
+
+= 1.0.3 =
+* Bug fixes
+
+= 1.0.2 =
+* Bug fixes
+
 = 1.0.1 =
 * Added German Language
 * Minor fixes of html
