@@ -87,9 +87,6 @@ $response->sendResponse();
  */
 class Bridge_Loader
 {
-
-    var $installLevel = 1;
-
     /**
      * @var Bridge_Module_Cms_Abstract
      */
@@ -108,11 +105,7 @@ class Bridge_Loader
     {
         $currentDir = realpath(dirname(__FILE__));
         $this->bridgeDir = $currentDir . '/';
-        $this->rootDir = realpath($currentDir . str_repeat('/..', $this->installLevel));
-//
-//        $path = realpath(dirname(__FILE__) . str_repeat('/..', $this->installLevel));
-//        $this->_base_dir = str_replace('\\', '/', $path);
-
+        $this->rootDir = realpath($currentDir . str_repeat('/..', $this->getRootLevel()));
         $this->fs = new Bridge_Fs($this);
     }
 
@@ -132,15 +125,30 @@ class Bridge_Loader
         return $bridgeVersion;
     }
 
+
+    public function getRootLevel()
+    {
+        $rootLevel = 1;
+        $levelFile = $this->getBridgeDir() . 'root_level.txt';
+        if (file_exists($levelFile)) {
+            $rootLevel = file_get_contents($levelFile);
+        }
+
+        return $rootLevel;
+    }
+
     public function getAccessKey()
     {
         $loader = Bridge_Loader::getInstance();
         $dir = $loader->getBridgeDir();
         $keyFile = $dir . DIRECTORY_SEPARATOR . 'key.php';
 
-        if (!file_exists($keyFile)){
+        if (!file_exists($keyFile)) {
             $currentCms = $loader->getCmsInstance();
             $key = $currentCms->getAccessKey();
+            if (!$key) {
+                Bridge_Exception::ex('Access Key is empty', 'invalid_hash');
+            }
             define('CMS2CMS_ACCESS_KEY', $key);
         }
         else {
@@ -267,6 +275,12 @@ class Bridge_Loader
             ),
             'b2evolution' => array(
                 'b2evolution',
+            ),
+            'dle' => array(
+                'dle',
+            ),
+            'e107' => array(
+                'e107',
             )
         );
 
@@ -349,6 +363,7 @@ class Bridge_Loader
     }
 
 }
+
 ?><?php
 class Bridge_Fs
 {
@@ -2572,7 +2587,6 @@ class Bridge_Module_FileList
 ?><?php
 abstract class Bridge_Module_Cms_Abstract
 {
-
     protected $config;
 
     protected function getTablePrefix($tableName)
@@ -2583,8 +2597,8 @@ abstract class Bridge_Module_Cms_Abstract
             $prefix = $config['db']['dbprefix'];
         }
 
-        if (is_array($prefix)){
-            if (isset($prefix[$tableName])){
+        if (is_array($prefix)) {
+            if (isset($prefix[$tableName])) {
                 $prefix = $prefix[$tableName];
             }
             else {
@@ -2642,6 +2656,10 @@ abstract class Bridge_Module_Cms_Abstract
 
     abstract public function getSiteUrl();
 
+    abstract protected function getDbConfigPath();
+
+    abstract protected function getVersionConfigPath();
+
     public function resolveRedirect()
     {
         return array(
@@ -2661,6 +2679,7 @@ abstract class Bridge_Module_Cms_Abstract
     }
 
 }
+
 ?><?php
 class Bridge_Module_Cms_WordPress_WordPress3 extends Bridge_Module_Cms_Abstract
 {
@@ -2792,10 +2811,6 @@ class Bridge_Module_Cms_WordPress_WordPress3 extends Bridge_Module_Cms_Abstract
 abstract class Bridge_Module_Cms_Joomla_Base extends Bridge_Module_Cms_Abstract
 {
 
-    abstract protected function getDbConfigPath();
-
-    abstract protected function getVersionConfigPath();
-
     public function detect()
     {
         $config = $this->getDbConfigPath();
@@ -2906,10 +2921,19 @@ class Bridge_Module_Cms_Joomla_Joomla15 extends Bridge_Module_Cms_Joomla_Base
             $this->prefixTable('plugins')
         );
 
+        $sqlComponents = sprintf(
+            '
+                    SELECT `name`, `enabled` AS published
+                    FROM `%s`
+                ',
+            $this->prefixTable('components')
+        );
+
         $modules = $db->fetchAll($sqlModules, 'module');
         $plugins = $db->fetchAll($sqlPlugins, 'name');
+        $components = $db->fetchAll($sqlComponents, 'name');
 
-        return array_merge($modules, $plugins);
+        return array_merge($modules, $plugins, $components);
 
     }
 
@@ -3075,7 +3099,7 @@ class Bridge_Module_Cms_Drupal_Drupal5 extends  Bridge_Module_Cms_Abstract
         $sql = sprintf(
             '
                 SELECT `name`, `status`
-                FROM `%s`
+                FROM `%s` WHERE `status` = 1
             ',
             $this->prefixTable('system')
         );
@@ -3306,6 +3330,10 @@ class Bridge_Module_Cms_Typo3_Typo36 extends Bridge_Module_Cms_Typo3_Base
         return '';
     }
 
+    protected function getVersionConfigPath()
+    {
+        return false;
+    }
 }
 ?><?php
 class Bridge_Module_Cms_phpBb_phpBb extends Bridge_Module_Cms_Abstract
