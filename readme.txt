@@ -23,6 +23,8 @@ This plugin is developed to help you move your site content from Drupal to WordP
 * internal links
 * comments
 * attachments
+* custom post types 
+* custom fields
 
 *Supported Drupal versions:* 5.x, 6.x, 7.x
 *Supported WordPress versions:* 3.x (new software versions are constantly being added).
@@ -45,6 +47,7 @@ This plugin is developed to help you move your site content from Drupal to WordP
 1. Find Drupal website FTP access details (host, username, password) - these are used to install connection bridge on Drupal site.
 1. Set up custom URL structure for WordPress for internal links to work correctly after the migration.
 
+Find more info here: http://www.cms2cms.com/supported-cms/drupal-to-wordpress-migration 
 
 == Installation ==
 
