@@ -2755,9 +2755,9 @@ class Bridge_Module_Cms_WordPress_WordPress3 extends Bridge_Module_Cms_Abstract
 
     public function getImageDir()
     {
-        $optImgDirectory = $this->getOptionValue('upload_path');
+        $optImgDirectory = DIRECTORY_SEPARATOR . ltrim($this->getOptionValue('upload_path'), DIRECTORY_SEPARATOR);
 
-        $path = '/wp-content/uploads';
+        $path = DIRECTORY_SEPARATOR . 'wp-content' . DIRECTORY_SEPARATOR . 'uploads';
         if (!empty($optImgDirectory)) {
             $path = Bridge_Loader::getInstance()->getFs()->getLocalRelativePath($optImgDirectory);
         }
@@ -3862,6 +3862,162 @@ class Bridge_Module_Cms_b2evolution_b2evolution extends Bridge_Module_Cms_Abstra
         }
 
         return $plugins;
+    }
+}
+
+?><?php
+class Bridge_Module_Cms_e107_e107 extends Bridge_Module_Cms_Abstract
+{
+
+    protected $config = null;
+
+    protected function getDbConfigPath()
+    {
+        $dbConfig = Bridge_Loader::getInstance()->getCurrentPath() . DIRECTORY_SEPARATOR . 'e107_config.php';
+
+        return $dbConfig;
+    }
+
+    protected function getVersionConfigPath()
+    {
+        $versionConfig = Bridge_Loader::getInstance()->getCurrentPath() . DIRECTORY_SEPARATOR . 'e107_admin' . DIRECTORY_SEPARATOR . 'ver.php';
+
+        return $versionConfig;
+    }
+
+    public function detect()
+    {
+        $dbConfig = $this->getDbConfigPath();
+
+        $versionConfig = $this->getVersionConfigPath();
+
+        return file_exists($dbConfig) && file_exists($versionConfig);
+    }
+
+    protected function getConfigFromConfigFiles()
+    {
+        $dbConfig = $this->getDbConfigPath();
+        $versionConfig = $this->getVersionConfigPath();
+
+        $dbConfigContent = Bridge_Includer::stripIncludes($dbConfig);
+        $versionConfigContent = Bridge_Includer::stripIncludes($versionConfig);
+
+        define('e107_INIT', true);
+
+        ob_start();
+        eval ($dbConfigContent);
+        eval ($versionConfigContent);
+        ob_clean();
+
+        if (!isset($mySQLserver) || !isset($mySQLuser)
+            || !isset($mySQLpassword) || !isset($mySQLdefaultdb) || !isset($mySQLprefix)
+        ) {
+            Bridge_Exception::ex('Can not detect config for e107', null);
+
+            return;
+        }
+
+        $config['CMSType'] = 'E107';
+        $config['db']['host'] = $mySQLserver;
+        $config['db']['user'] = $mySQLuser;
+        $config['db']['password'] = $mySQLpassword;
+        $config['db']['dbname'] = $mySQLdefaultdb;
+        $config['db']['dbprefix'] = $mySQLprefix;
+        $config['db']['driver'] = 'mysql';
+        $config['version'] = $e107info['e107_version'];
+
+        return $config;
+    }
+
+    public function getImageDir()
+    {
+        $imgDir = Bridge_Loader::getInstance()->getCurrentPath() . DIRECTORY_SEPARATOR . 'e107_images';
+
+        return $imgDir;
+    }
+
+    public function getSiteUrl()
+    {
+        return '';
+    }
+
+    public function detectExtensions()
+    {
+        return array();
+    }
+}
+
+?><?php
+class Bridge_Module_Cms_dle_dle extends Bridge_Module_Cms_Abstract
+{
+
+    protected $config = null;
+
+    protected function getDbConfigPath()
+    {
+        $dbConfig = Bridge_Loader::getInstance()->getCurrentPath() . DIRECTORY_SEPARATOR . 'engine' . DIRECTORY_SEPARATOR . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'dbconfig.php';
+
+        return $dbConfig;
+    }
+
+    protected function getVersionConfigPath()
+    {
+        $versionConfig = Bridge_Loader::getInstance()->getCurrentPath() . DIRECTORY_SEPARATOR . 'engine' . DIRECTORY_SEPARATOR . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'config.php';
+
+        return $versionConfig;
+    }
+
+    public function detect()
+    {
+        $dbConfig = $this->getDbConfigPath();
+
+        $versionConfig = $this->getVersionConfigPath();
+
+        return file_exists($dbConfig) && file_exists($versionConfig);
+    }
+
+    protected function getConfigFromConfigFiles()
+    {
+        $dbConfig = $this->getDbConfigPath();
+        $versionConfig = $this->getVersionConfigPath();
+
+        $dbConfigContent = Bridge_Includer::stripIncludes($dbConfig);
+        $versionConfigContent = Bridge_Includer::stripIncludes($versionConfig);
+
+        $class = 'class db{function index(){}}';
+        ob_start();
+        eval ($class);
+        eval ($dbConfigContent);
+        eval ($versionConfigContent);
+        ob_clean();
+
+        $config['CMSType'] = 'Dle';
+        $config['db']['host'] = defined('DBHOST') ? constant('DBHOST') : 'localhost';
+        $config['db']['user'] = defined('DBUSER') ? constant('DBUSER') : 'root';
+        $config['db']['password'] = defined('DBPASS') ? constant('DBPASS') : '';
+        $config['db']['dbname'] = defined('DBNAME') ? constant('DBNAME') : 'dle';
+        $config['db']['dbprefix'] = defined('PREFIX') ? constant('PREFIX') . '_' : '';
+        $config['db']['driver'] = 'mysql';
+        $config['version'] = $config['version_id'];
+
+        return $config;
+    }
+
+    public function getImageDir()
+    {
+        $imgDir = Bridge_Loader::getInstance()->getCurrentPath() . DIRECTORY_SEPARATOR . 'uploads';
+
+        return $imgDir;
+    }
+
+    public function getSiteUrl()
+    {
+        return '';
+    }
+
+    public function detectExtensions()
+    {
+        return array();
     }
 }
 
