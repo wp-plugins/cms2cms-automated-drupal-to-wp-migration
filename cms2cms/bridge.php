@@ -2758,7 +2758,7 @@ class Bridge_Module_Cms_WordPress_WordPress3 extends Bridge_Module_Cms_Abstract
         $optImgDirectory = DIRECTORY_SEPARATOR . ltrim($this->getOptionValue('upload_path'), DIRECTORY_SEPARATOR);
 
         $path = DIRECTORY_SEPARATOR . 'wp-content' . DIRECTORY_SEPARATOR . 'uploads';
-        if (!empty($optImgDirectory)) {
+        if (!empty($optImgDirectory) && $optImgDirectory != DIRECTORY_SEPARATOR) {
             $path = Bridge_Loader::getInstance()->getFs()->getLocalRelativePath($optImgDirectory);
         }
 
