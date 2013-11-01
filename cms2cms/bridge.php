@@ -47,7 +47,9 @@
  * (c) 2010 MagneticOne.com <contact@cms2cms.com>
  */
 ?><?php
-
+if (PHP_VERSION_ID < 50200) {
+    die('Your PHP version (' . phpversion() . ') is not supported. Feel free to <a href="http://support.magneticone.com/indexphp?/Tickets/Submit/RenderForm/56">contact us</a>.');
+}
 @set_time_limit(0);
 @ini_set('max_execution_time', 0);
 error_reporting(E_ALL & ~E_NOTICE & ~E_STRICT & ~E_WARNING);
@@ -61,8 +63,9 @@ if (get_magic_quotes_gpc()) {
             unset($process[$key][$k]);
             if (is_array($v)) {
                 $process[$key][stripslashes($k)] = $v;
-                $process[] = &$process[$key][stripslashes($k)];
-            } else {
+                $process[] = & $process[$key][stripslashes($k)];
+            }
+            else {
                 $process[$key][stripslashes($k)] = stripslashes($v);
             }
         }
