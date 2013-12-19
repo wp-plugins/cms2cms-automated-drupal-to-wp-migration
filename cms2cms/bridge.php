@@ -47,9 +47,6 @@
  * (c) 2010 MagneticOne.com <contact@cms2cms.com>
  */
 ?><?php
-if (PHP_VERSION_ID < 50200) {
-    die('Your PHP version (' . phpversion() . ') is not supported. Feel free to <a href="http://support.magneticone.com/indexphp?/Tickets/Submit/RenderForm/56">contact us</a>.');
-}
 @set_time_limit(0);
 @ini_set('max_execution_time', 0);
 error_reporting(E_ALL & ~E_NOTICE & ~E_STRICT & ~E_WARNING);
@@ -74,12 +71,12 @@ if (get_magic_quotes_gpc()) {
 }
 
 header('X-msa-localtime: ' . time());
-$loader = & Bridge_Loader::getInstance();
+$loader = Bridge_Loader::getInstance();
 
 $app = new Bridge_Dispatcher();
 $app->dispatch();
 
-$response = & Bridge_Response::getInstance();
+$response =  Bridge_Response::getInstance();
 $response->sendResponse();
 ?><?php
 
@@ -104,7 +101,7 @@ class Bridge_Loader
 
     protected $rootDir;
 
-    function Bridge_Loader()
+    private function __construct()
     {
         $currentDir = realpath(dirname(__FILE__));
         $this->bridgeDir = $currentDir . '/';
@@ -128,7 +125,6 @@ class Bridge_Loader
         return $bridgeVersion;
     }
 
-
     public function getRootLevel()
     {
         $rootLevel = 1;
@@ -149,12 +145,13 @@ class Bridge_Loader
         if (!file_exists($keyFile)) {
             $currentCms = $loader->getCmsInstance();
             $key = $currentCms->getAccessKey();
-            if (!$key) {
-                Bridge_Exception::ex('Access Key is empty', 'invalid_hash');
+            if (empty($key)) {
+                Bridge_Exception::ex('Access Key is empty', 'empty_hash');
             }
             define('CMS2CMS_ACCESS_KEY', $key);
         }
         else {
+            /** @noinspection PhpIncludeInspection */
             include $keyFile;
         }
 
@@ -355,7 +352,7 @@ class Bridge_Loader
      *
      * @return Bridge_Loader
      */
-    function &getInstance()
+    public static function getInstance()
     {
         static $class;
         if ($class == null) {
@@ -455,6 +452,7 @@ class Bridge_Fs
      *
      * @param string $dir Path to directory
      *
+     * @param bool $self
      * @return array
      */
     function getDirList($dir, $self = false)
@@ -529,11 +527,25 @@ class Bridge_Fs
 ?><?php
 class Bridge_Response_Null
 {
-    function openNode() {} 
-    function closeNode() {}
-    function closeResponseFile() {}
-    function sendResponse() {}
-    function sendData($data){}
+    function openNode()
+    {
+    }
+
+    function closeNode()
+    {
+    }
+
+    function closeResponseFile()
+    {
+    }
+
+    function sendResponse()
+    {
+    }
+
+    function sendData($data)
+    {
+    }
 }
 
 class Bridge_Response_Memory
@@ -558,8 +570,8 @@ class Bridge_Response_Memory
     function closeNode()
     {
         $nodeName = array_pop($this->openNodes);
-        if ($nodeName == false){
-            Bridge_Exceprion::ex('Trying to close response node but no des are opened');
+        if ($nodeName == false) {
+            Bridge_Exception::ex('Trying to close response node but no does are opened', 0);
         }
         $this->response .= '</' . $nodeName . '>';
     }
@@ -598,60 +610,71 @@ class Bridge_Response_Memory
 
 class Bridge_Response
 {
-	/**
-	 * Create a singleton instance of Bridge_Response
-	 *
-	 * @return Bridge_Response_Solid
-	 */
-	function &getInstance($classname = '')
-	{
-	    static $obj;
-	    if ($obj === null || ($classname != '' && get_class($obj) != $classname)) 
-	    {
-	        if ($classname == '') {
-	            $classname = 'Bridge_Response_Memory';
+
+    private function __construct()
+    {
+
+    }
+
+    /**
+     * Create a singleton instance of Bridge_Response
+     *
+     * @param string $classname
+     * @return Bridge_Response
+     */
+    public static function  getInstance($classname = '')
+    {
+        static $obj;
+        if ($obj === null || ($classname != '' && get_class($obj) != $classname)) {
+            if ($classname == '') {
+                $classname = 'Bridge_Response_Memory';
             }
 
-	        $obj = new $classname();
-	    }
-	    return $obj;
-	}
+            $obj = new $classname();
+        }
 
-	function openNode($nodeName = '')
-	{
-       $obj = & Bridge_Response::getInstance();
-       $obj->openNode($nodeName);
-	}
-	
-	function closeNode()
-	{
-	   $obj = & Bridge_Response::getInstance();
-       $obj->closeNode();
-	}
+        return $obj;
+    }
+
+    static function openNode($nodeName = '')
+    {
+        $obj = Bridge_Response::getInstance();
+        $obj->openNode($nodeName);
+    }
+
+    static function closeNode()
+    {
+        $obj = Bridge_Response::getInstance();
+        $obj->closeNode();
+    }
 
     function sendData($data)
     {
-        $obj = & Bridge_Response::getInstance();
+        $obj = Bridge_Response::getInstance();
         $obj->sendData($data);
     }
-	
-	function getFileHandler()
-	{
-	    $obj = & Bridge_Response::getInstance();
-	    return $obj->hFile;
-	}
-		
-	function disable()
-	{
-	    Bridge_Response::getInstance('Bridge_Response_Null');
-	}
-	
-	function sendResponse() 
-	{
-	    $obj = & Bridge_Response::getInstance();
+
+   static function getFileHandler()
+    {
+        $obj = Bridge_Response::getInstance();
+
+        /** @noinspection PhpUndefinedFieldInspection */
+
+        return $obj->hFile;
+    }
+
+   static  function disable()
+    {
+        Bridge_Response::getInstance('Bridge_Response_Null');
+    }
+
+    function sendResponse()
+    {
+        $obj = Bridge_Response::getInstance();
         $obj->sendResponse();
-	}
+    }
 }
+
 ?><?php
 
 class Bridge_Includer {
@@ -699,12 +722,9 @@ class Bridge_Includer {
         }
 
         ob_start();
+        /** @noinspection PhpIncludeInspection */
         include($fileName);
         ob_clean();
-
-        if (function_exists('error_get_last')) {
-            $lastPHPError = error_get_last();
-        }
 
         //TODO think about moving "general" environment variables to sub-array
         $environment = array(
@@ -862,33 +882,38 @@ class Bridge_Includer {
 
 }
 ?><?php
-class Bridge_Exception {
-	
-	var $_warnings;
-	var $throwExceptions;
-    
-	function & getInstance() {
-		static $instance = null;
-		if ($instance === null) {
-			$instance = new Bridge_Exception();
-		}
-		return $instance;
-	}
-	
-	/*
-	function canThrowExceptions($throwExceptions = false)
-	{
-		if (is_bool($throwExceptions)) {
-			Bridge_Exception::$throwExceptions = $throwExceptions;
-		}
-		return $this;
-	}
-	*/
-	
-	function ex($message, $code)
-	{
-		$obj = & Bridge_Exception::getInstance();
-		$xmlError = '
+class Bridge_Exception
+{
+    var $_warnings;
+
+    var $throwExceptions;
+
+    private function __construct()
+    {
+
+    }
+
+    /**
+     * @return Bridge_Exception
+     */
+    public static function getInstance()
+    {
+        static $instance = null;
+        if ($instance === null) {
+            $instance = new Bridge_Exception();
+        }
+
+        return $instance;
+    }
+
+    /**
+     * @param $message
+     * @param $code
+     */
+    public static function ex($message, $code)
+    {
+        $obj = Bridge_Exception::getInstance();
+        $xmlError = '
 			<response>
 				<error>
     				<type>Exception</type>
@@ -904,71 +929,65 @@ class Bridge_Exception {
 			</response>
 		';
 
-        /*
-        if ($this->canThrowExceptions()) {
-			throw new Exception($xmlError);
-		} 
-		else {
-		}
-        */
-
         header('X-msa-iserror: 1');
         die($xmlError);
 
-	}
-	
-	function warn($message)
-	{
-		$this->_warnings[] = $message;
-	}
-	
-	function _runtimeInfo() {
-		$info = 'PHP Version: ' . phpversion() . PHP_EOL 
-		      //. 'MySQL Server Version: ' . mysql_get_server_info() . PHP_EOL 
-		      . 'Webserver Version: ' . $_SERVER['SERVER_SOFTWARE'] . PHP_EOL;
-		
-		return $info;
-		// 1. debug backtrace
-		// 2. php version
-		// 3. mysql version
-		// 4. webserver version
-		// 5. shopping cart type
-		// 6. last mysql error
-		// 7. last mysql query
-	}
-	
-	function _backtrace()
-	{
-	    $trace = debug_backtrace();
-	    $m1_trace = array();
-	    $trace = array_reverse($trace, true);
-	    foreach ($trace as $i => $call) {
-	    	if ($i == 0 || $i == 1)
-	    	    continue;
-	    	    
-	    	$newIndex = $i - 2;
-	        
-	    	if ( $newIndex == 0)
-	    	{
-	    	    $b = '<b>'; $be = '</b>';
-	    	}
-	    	else 
-	    	{
-	    	    $b = ''; $be = '';
-	    	}
-	    	
-	    	$call['file'] = str_replace(realpath($_SERVER['DOCUMENT_ROOT']), '', realpath($call['file']));
-	    	$call['file'] = str_replace('/' . basename($call['file']), '<b>' . '/' . basename($call['file']) . '</b>', $call['file']);
-	    	    
-	    	$m1_trace .= "\n" .
-	    	    $newIndex . ': ' . $call['file'] . ':<b>' . $call['line'] . '</b> => ' 
-	    	    . $call['class'] . $call['type'] . '<b>' . $call['function'] . '</b>'
-	    	    . (!empty($call['args']) ?'("' . implode('","', $call['args']) . '")' : '()');
-	    }
-	    
-	    return $m1_trace;
-	}
+    }
+
+    /**
+     * @param $message
+     */
+    function warn($message)
+    {
+        $this->_warnings[] = $message;
+    }
+
+    /**
+     * @return string
+     */
+    function _runtimeInfo()
+    {
+        $info = 'PHP Version: ' . phpversion() . PHP_EOL
+            . 'Webserver Version: ' . $_SERVER['SERVER_SOFTWARE'] . PHP_EOL;
+
+        return $info;
+        // 1. debug backtrace
+        // 2. php version
+        // 3. mysql version
+        // 4. webserver version
+        // 5. shopping cart type
+        // 6. last mysql error
+        // 7. last mysql query
+    }
+
+    /**
+     * @return array|string
+     */
+    function _backtrace()
+    {
+        $trace = debug_backtrace();
+        $m1_trace = array();
+        $trace = array_reverse($trace, true);
+        foreach ($trace as $i => $call) {
+            if ($i == 0 || $i == 1) {
+                continue;
+            }
+
+            $newIndex = $i - 2;
+
+            $call['file'] = str_replace(realpath($_SERVER['DOCUMENT_ROOT']), '', realpath($call['file']));
+            $call['file'] = str_replace('/' . basename($call['file']), '<b>' . '/' . basename($call['file']) . '</b>', $call['file']);
+
+            $m1_trace .= "\n" .
+                $newIndex . ': ' . $call['file'] . ':<b>' . $call['line'] . '</b> => '
+                . $call['class'] . $call['type'] . '<b>' . $call['function'] . '</b>'
+                . (!empty($call['args']) ? '("' . implode('","', $call['args']) . '")' : '()');
+        }
+
+        return $m1_trace;
+    }
 }
+
 ?><?php
 class Bridge_Dispatcher
 {
@@ -994,17 +1013,20 @@ class Bridge_Dispatcher
         $module = $_REQUEST['module'];
         $params = $_REQUEST['params'];
 
-        if (isset($params['encoding']) && ($params['encoding'] === 'base64-serialize')){
+        if (isset($params['encoding']) && ($params['encoding'] === 'base64-serialize')) {
             $encodedParams = $params['value'];
             $params = unserialize(base64_decode($encodedParams));
         }
 
         $moduleClassName = 'Bridge_Module_' . ucfirst($module);
+
         $oModule = new $moduleClassName();
+        /** @noinspection PhpUndefinedMethodInspection */
         $oModule->run($params);
     }
 
 }
+
 ?><?php
 /**
  * Database abstraction layer
@@ -1040,12 +1062,17 @@ class Bridge_Db
      */
     var $_profiler_log = array();
 
+    private function __construct()
+    {
+
+    }
+
     /**
      * Create instance of db connection layer
      *
      * @return Bridge_Db
      */
-    function & getAdapter()
+    public static function  getAdapter()
     {
         static $instance = null;
         if ($instance === null) {
@@ -1062,7 +1089,7 @@ class Bridge_Db
      */
     function enableProfiler($enable = true)
     {
-        $db = & Bridge_Db::getAdapter();
+        $db = Bridge_Db::getAdapter();
         $db->_enable_profiler = ($enable ? true : false); // cast to boolean
     }
 
@@ -1160,8 +1187,8 @@ class Bridge_Db
      * Fetch the all data for sql query and write it into gzipped file
      *
      * @param string $sql Plain SQL query
-     * @param string $fileName Destination filename
      * @param string $keyField Primary Key field
+     * @internal param string $fileName Destination filename
      * @return string Result file full path
      */
     function fetchAllIntoFile($sql, $keyField = '')
@@ -1195,7 +1222,6 @@ class Bridge_Db
         if ($buffer != '') {
             gzwrite($cFile, $buffer);
         }
-        $buffer = ''; // free buffer allocated memory
         gzwrite($cFile, '</rows>');
 
         $this->_profile_end($sql);
@@ -1210,6 +1236,7 @@ class Bridge_Db
     function _profile_start()
     {
         if ($this->_enable_profiler) {
+            /** @noinspection PhpUndefinedFieldInspection */
             $this->_startTime = time() + floatval(microtime(true));
         }
     }
@@ -1222,6 +1249,7 @@ class Bridge_Db
     function _profile_end($sql)
     {
         if ($this->_enable_profiler) {
+            /** @noinspection PhpUndefinedFieldInspection */
             $this->_profiler_log[] = array(
                 'sql' => $sql,
                 'time' => (time() + floatval(microtime(true)) - $this->_startTime),
@@ -1234,6 +1262,7 @@ class Bridge_Db
      * Execute passed SQL query using default mysql connetion
      *
      * @param string $sql Plain SQL query
+     * @throws Exception
      * @return resource MySQL result set
      */
     function execute($sql)
@@ -1288,7 +1317,7 @@ class Bridge_Db
 
     public static function getDbAdapter()
     {
-        $db = & Bridge_Db::getAdapter();
+        $db = Bridge_Db::getAdapter();
         if (!is_resource($db->_link)) {
             $config = Bridge_Loader::getInstance()->getCmsInstance()->getConfig();
             $db->connect(
@@ -1325,22 +1354,25 @@ class Bridge_Db
     }
 
 }
+
 ?><?php
 class Bridge_Base
 {
     function getShoppingCartType()
     {
-        return Bridge_Loader::getCmsTypeSuggested();
+        return Bridge_Loader::getInstance()->detectCms();
     }
 
     function _matchFirst($pattern, $subject, $matchNum = 0)
     {
         $matches = array();
         preg_match($pattern, $subject, $matches);
+
         return $matches[$matchNum];
     }
 
 }
+
 ?><?php
 class Bridge_Module_Info
 {
@@ -1402,7 +1434,7 @@ class Bridge_Module_Info
 
     protected function getWebServerCharset()
     {
-        return $_SERVER['HTTP_ACCEPT_CHARSET'];
+        return isset($_SERVER['HTTP_ACCEPT_CHARSET'])?$_SERVER['HTTP_ACCEPT_CHARSET']:'';
     }
 
     protected function getPhpCharset()
@@ -2296,7 +2328,7 @@ class Bridge_Module_Dump
 
     protected function runShowCreate(array $params)
     {
-        if (!isset($params['table'])){
+        if (!isset($params['table'])) {
             throw new Exception('Table param is missing');
         }
 
@@ -2308,7 +2340,7 @@ class Bridge_Module_Dump
         );
 
         $rows = $this->db->fetchAll($sql);
-        if (count($rows) === 0){
+        if (count($rows) === 0) {
             throw new Exception();
         }
 
@@ -2320,11 +2352,11 @@ class Bridge_Module_Dump
 
     protected function runExecCreate($params)
     {
-        if (!isset($params['createStatement'])){
+        if (!isset($params['createStatement'])) {
             throw new Exception('Statement param is missing');
         }
 
-        if (!isset($params['dropStatement'])){
+        if (!isset($params['dropStatement'])) {
             throw new Exception('Table param is missing');
         }
 
@@ -2336,7 +2368,7 @@ class Bridge_Module_Dump
             $this->db->execute($dropSql);
             $this->db->execute($createSql);
         }
-        catch(Exception $e){
+        catch (Exception $e) {
             Bridge_Exception::ex($e->getMessage(), 'db_error');
         }
     }
@@ -2348,7 +2380,7 @@ class Bridge_Module_Dump
             $table
         );
 
-        if ($filter !== ''){
+        if ($filter !== '') {
             $sql .= ' ' . $filter;
         }
 
@@ -2360,15 +2392,15 @@ class Bridge_Module_Dump
 
     protected function runSelect(array $params)
     {
-        if (!isset($params['table'])){
+        if (!isset($params['table'])) {
             throw new Exception('Table param is missing');
         }
 
-        if (!isset($params['limit'])){
+        if (!isset($params['limit'])) {
             throw new Exception('Limit param is missing');
         }
 
-        if (!isset($params['offset'])){
+        if (!isset($params['offset'])) {
             throw new Exception('Offset param is missing');
         }
 
@@ -2377,7 +2409,7 @@ class Bridge_Module_Dump
         $offset = $params['offset'];
 
         $filter = '';
-        if (isset($params['filter'])){
+        if (isset($params['filter'])) {
             $filter = $params['filter'];
         }
 
@@ -2399,24 +2431,33 @@ class Bridge_Module_Dump
     {
         $fieldNamesEscaped = array();
         $fieldValuesEscaped = array();
-        foreach($data as $fieldName => $fieldValue){
+        $dublicatedFields = array();
+        $dublicatedString = '';
+        foreach ($data as $fieldName => $fieldValue) {
             $fieldNamesEscaped[] = '`' . $fieldName . '`';
-            if ($fieldValue !== null){
+            if ($fieldValue !== null) {
                 $fieldValuesEscaped[] = '"' . ($this->db->escape($fieldValue)) . '"';
             }
             else {
                 $fieldValuesEscaped[] = 'null';
             }
+
+            $dublicatedFields[] = sprintf('%s = values(%s)', '`' . $fieldName . '`', '`' . $fieldName . '`');
+        }
+
+        if (count($dublicatedFields) > 0) {
+            $dublicatedString = ' ON DUPLICATE KEY UPDATE ' . implode(', ', $dublicatedFields);
         }
 
         $fieldsStr = implode(',', $fieldNamesEscaped);
         $valuesStr = implode(',', $fieldValuesEscaped);
 
         $sql = sprintf(
-            'INSERT INTO `%s`(%s) VALUES (%s)',
+            'INSERT INTO `%s`(%s) VALUES (%s) %s',
             $table,
             $fieldsStr,
-            $valuesStr
+            $valuesStr,
+            $dublicatedString
         );
 
         return $sql;
@@ -2424,11 +2465,11 @@ class Bridge_Module_Dump
 
     protected function runInsert(array $params)
     {
-        if (!isset($params['table'])){
+        if (!isset($params['table'])) {
             throw new Exception('Table param is missing');
         }
 
-        if (!isset($params['rows'])){
+        if (!isset($params['rows'])) {
             throw new Exception('Rows param is missing');
         }
 
@@ -2436,14 +2477,14 @@ class Bridge_Module_Dump
         $rows = $params['rows'];
 
         $errors = array();
-        foreach($rows as $index => $row){
+        foreach ($rows as $index => $row) {
             $data = unserialize(base64_decode($row));
             $sql = $this->getInsertQuery($table, $data);
 
             try {
                 $this->db->execute($sql);
             }
-            catch(Exception $e){
+            catch (Exception $e) {
                 $errors[$index] = $e->getMessage();
             }
         }
@@ -2460,7 +2501,7 @@ class Bridge_Module_Dump
 
     protected function runExecute(array $params)
     {
-        if (!isset($params['queryData'])){
+        if (!isset($params['queryData'])) {
             throw new Exception('QueryData param is missing');
         }
 
@@ -2472,7 +2513,7 @@ class Bridge_Module_Dump
 
     protected function runCount(array $params)
     {
-        if (!isset($params['table'])){
+        if (!isset($params['table'])) {
             throw new Exception('Table param is missing');
         }
 
@@ -2490,11 +2531,11 @@ class Bridge_Module_Dump
 
     protected function runDelete(array $params)
     {
-        if (!isset($params['table'])){
+        if (!isset($params['table'])) {
             throw new Exception('Table param is missing');
         }
 
-        if (!isset($params['count'])){
+        if (!isset($params['count'])) {
             throw new Exception('Table param is missing');
         }
 
@@ -2509,7 +2550,7 @@ class Bridge_Module_Dump
             $count
         );
 
-        $result = $this->db->execute($sql);
+        $this->db->execute($sql);
         $count = $this->db->affectedRows();
 
         $this->response->sendNode('deleteCount', $count);
@@ -2517,7 +2558,7 @@ class Bridge_Module_Dump
 
     protected function doOperation($operation, $params)
     {
-        switch($operation){
+        switch ($operation) {
             case 'list-tables':
                 $this->runListTables();
                 break;
@@ -2549,7 +2590,7 @@ class Bridge_Module_Dump
 
     function run($params)
     {
-        if (!isset($params['operation'])){
+        if (!isset($params['operation'])) {
             Bridge_Exception::ex('Type param is missing', 'dump_error');
         }
         $operation = $params['operation'];
@@ -2559,13 +2600,14 @@ class Bridge_Module_Dump
             $this->db->setNames();
             $this->doOperation($operation, $params);
         }
-        catch(Exception $e){
+        catch (Exception $e) {
             Bridge_Exception::ex($e->getMessage(), 'dump_error');
         }
         $this->response->closeNode();
     }
 
 }
+
 ?><?php
 class Bridge_Module_FileList
 {
@@ -2859,7 +2901,9 @@ class Bridge_Module_Cms_Joomla_Joomla15 extends Bridge_Module_Cms_Joomla_Base
 
         define('JPATH_BASE', Bridge_Loader::getInstance()->getCurrentPath());
         ob_start();
+        /** @noinspection PhpIncludeInspection */
         include ($config);
+        /** @noinspection PhpIncludeInspection */
         include ($version);
         ob_clean();
 
@@ -2867,20 +2911,33 @@ class Bridge_Module_Cms_Joomla_Joomla15 extends Bridge_Module_Cms_Joomla_Base
             return false;
         }
 
+        /** @noinspection PhpUndefinedClassInspection */
         $joomlaVersion = new JVersion();
+        /** @noinspection PhpUndefinedClassInspection */
         $joomlaConfig = new JConfig();
 
         $config = array();
         $config['CMSType'] = 'Joomla';
+        /** @noinspection PhpUndefinedFieldInspection */
+        /** @noinspection PhpUndefinedFieldInspection */
         $config['version'] = $joomlaVersion->RELEASE . '.' . $joomlaVersion->DEV_LEVEL;
+        /** @noinspection PhpUndefinedFieldInspection */
         $config['seo']['is_use'] = $joomlaConfig->sef;
+        /** @noinspection PhpUndefinedFieldInspection */
         $config['seo']['sef_rewrite'] = $joomlaConfig->sef_rewrite;
+        /** @noinspection PhpUndefinedFieldInspection */
         $config['seo']['sef_suffix'] = $joomlaConfig->sef_suffix;
+        /** @noinspection PhpUndefinedFieldInspection */
         $config['db']['host'] = $joomlaConfig->host;
+        /** @noinspection PhpUndefinedFieldInspection */
         $config['db']['user'] = $joomlaConfig->user;
+        /** @noinspection PhpUndefinedFieldInspection */
         $config['db']['password'] = $joomlaConfig->password;
+        /** @noinspection PhpUndefinedFieldInspection */
         $config['db']['dbname'] = $joomlaConfig->db;
+        /** @noinspection PhpUndefinedFieldInspection */
         $config['db']['dbprefix'] = $joomlaConfig->dbprefix;
+        /** @noinspection PhpUndefinedFieldInspection */
         $config['db']['driver'] = $joomlaConfig->dbtype;
 
         return $config;
@@ -2892,7 +2949,9 @@ class Bridge_Module_Cms_Joomla_Joomla15 extends Bridge_Module_Cms_Joomla_Base
             return array();
         }
 
+        /** @noinspection PhpUndefinedClassInspection */
         $joomlaVersion = new JVersion();
+        /** @noinspection PhpUndefinedFieldInspection */
         if (version_compare($joomlaVersion->RELEASE, '1.5')) {
             $extensions = $this->detect16Extensions();
         }
@@ -2975,7 +3034,9 @@ class Bridge_Module_Cms_Joomla_Joomla17 extends Bridge_Module_Cms_Joomla_Joomla1
 
         define('_JEXEC', Bridge_Loader::getInstance()->getCurrentPath());
         ob_start();
+        /** @noinspection PhpIncludeInspection */
         include ($config);
+        /** @noinspection PhpIncludeInspection */
         include ($version);
         ob_clean();
 
@@ -2983,20 +3044,33 @@ class Bridge_Module_Cms_Joomla_Joomla17 extends Bridge_Module_Cms_Joomla_Joomla1
             return false;
         }
 
+        /** @noinspection PhpUndefinedClassInspection */
         $joomlaVersion = new JVersion();
+        /** @noinspection PhpUndefinedClassInspection */
         $joomlaConfig = new JConfig();
 
         $config = array();
         $config['CMSType'] = 'Joomla';
+        /** @noinspection PhpUndefinedFieldInspection */
+        /** @noinspection PhpUndefinedFieldInspection */
         $config['version'] = $joomlaVersion->RELEASE . '.' . $joomlaVersion->DEV_LEVEL;
+        /** @noinspection PhpUndefinedFieldInspection */
         $config['seo']['is_use'] = $joomlaConfig->sef;
+        /** @noinspection PhpUndefinedFieldInspection */
         $config['seo']['sef_rewrite'] = $joomlaConfig->sef_rewrite;
+        /** @noinspection PhpUndefinedFieldInspection */
         $config['seo']['sef_suffix'] = $joomlaConfig->sef_suffix;
+        /** @noinspection PhpUndefinedFieldInspection */
         $config['db']['host'] = $joomlaConfig->host;
+        /** @noinspection PhpUndefinedFieldInspection */
         $config['db']['user'] = $joomlaConfig->user;
+        /** @noinspection PhpUndefinedFieldInspection */
         $config['db']['password'] = $joomlaConfig->password;
+        /** @noinspection PhpUndefinedFieldInspection */
         $config['db']['dbname'] = $joomlaConfig->db;
+        /** @noinspection PhpUndefinedFieldInspection */
         $config['db']['dbprefix'] = $joomlaConfig->dbprefix;
+        /** @noinspection PhpUndefinedFieldInspection */
         $config['db']['driver'] = $joomlaConfig->dbtype;
 
         return $config;
@@ -3060,13 +3134,15 @@ class Bridge_Module_Cms_Drupal_Drupal5 extends  Bridge_Module_Cms_Abstract
         $db_prefix = '';
 
         ob_start();
+        /** @noinspection PhpIncludeInspection */
         include ($dbConfig);
+        /** @noinspection PhpIncludeInspection */
         include($versionConfig);
         ob_clean();
 
         if (!isset($db_url) || !defined('VERSION')) {
             Bridge_Exception::ex('Can not detect config', null);
-            return;
+            return false;
         }
 
         if (is_array($db_url)){
@@ -3074,6 +3150,7 @@ class Bridge_Module_Cms_Drupal_Drupal5 extends  Bridge_Module_Cms_Abstract
         }
 
         $data = parse_url($db_url);
+        /** @noinspection PhpUndefinedConstantInspection */
         $config['version'] = VERSION;
         $config['CMSType'] = 'Drupal';
         $config['db']['host'] = urldecode($data['host']);
@@ -3169,16 +3246,19 @@ class Bridge_Module_Cms_Drupal_Drupal7 extends Bridge_Module_Cms_Drupal_Drupal6
         $versionConfig = $this->getVersionConfigPath();
 
         ob_start();
+        /** @noinspection PhpIncludeInspection */
         include ($dbConfig);
+        /** @noinspection PhpIncludeInspection */
         include ($versionConfig);
         ob_clean();
 
         if (!isset($databases) || !defined('VERSION')) {
             Bridge_Exception::ex('Can not detect config', null);
-            return;
+            return false;
         }
 
         $config = array();
+        /** @noinspection PhpUndefinedConstantInspection */
         $config['version'] = VERSION;
         $config['CMSType'] = 'Drupal';
         $config['db']['host'] = $databases['default']['default']['host'];
@@ -3189,6 +3269,26 @@ class Bridge_Module_Cms_Drupal_Drupal7 extends Bridge_Module_Cms_Drupal_Drupal6
         $config['db']['driver'] = $databases['default']['default']['driver'];
 
         return $config;
+    }
+
+    public function getAccessKey()
+    {
+        $db = Bridge_Db::getDbAdapter();
+        $sql = sprintf(
+            "
+                SELECT `value`
+                FROM `%s`
+                WHERE `name` = 'cms2cms-key'
+            ",
+            $this->prefixTable('variable')
+        );
+
+        $key = unserialize($db->fetchOne($sql));
+        if (!$key) {
+            return null;
+        }
+
+        return $key;
     }
 }
 ?><?php
@@ -3233,7 +3333,9 @@ class Bridge_Module_Cms_Typo3_Typo34 extends Bridge_Module_Cms_Typo3_Base
 
         ob_start();
         define ('TYPO3_MODE', true);
+        /** @noinspection PhpIncludeInspection */
         include($this->getVersionConfigPath());
+        /** @noinspection PhpIncludeInspection */
         include($this->getDbConfigPath());
         ob_clean();
 
@@ -3242,7 +3344,7 @@ class Bridge_Module_Cms_Typo3_Typo34 extends Bridge_Module_Cms_Typo3_Base
         ) {
             Bridge_Exception::ex('Can not detect config for Typo3', null);
 
-            return;
+            return false;
         }
 
         $config['version'] = $TYPO3_CONF_VARS['SYS']['compat_version'];
@@ -3292,11 +3394,12 @@ class Bridge_Module_Cms_Typo3_Typo36 extends Bridge_Module_Cms_Typo3_Base
 
     protected function getConfigFromConfigFiles()
     {
+        /** @noinspection PhpIncludeInspection */
         $Typo3Config = require $this->getDbConfigPath();
 
         if (!isset($Typo3Config) || !isset($Typo3Config['SYS'])) {
             Bridge_Exception::ex('Can not detect config for Typo3', null);
-            return;
+            return false;
         }
 
         $config['version'] = $Typo3Config['SYS']['compat_version'];
@@ -3386,14 +3489,18 @@ class Bridge_Module_Cms_phpBb_phpBb extends Bridge_Module_Cms_Abstract
         ) {
             Bridge_Exception::ex('Can not detect config for phpBB', null);
 
-            return;
+            return false;
         }
 
         $config['CMSType'] = 'PhpBb';
         $config['db']['host'] = $dbhost;
+        /** @noinspection PhpUndefinedVariableInspection */
         $config['db']['user'] = $dbuser;
+        /** @noinspection PhpUndefinedVariableInspection */
         $config['db']['password'] = $dbpasswd;
+        /** @noinspection PhpUndefinedVariableInspection */
         $config['db']['dbname'] = $dbname;
+        /** @noinspection PhpUndefinedVariableInspection */
         $config['db']['dbprefix'] = $table_prefix;
         $config['db']['driver'] = isset($dbms) ? $dbms : 'mysqli';
         if (defined('PHPBB_VERSION')) {
@@ -3473,7 +3580,7 @@ class Bridge_Module_Cms_Vbulletin_Vbulletin4 extends Bridge_Module_Cms_Abstract
         if (empty($config)) {
             Bridge_Exception::ex('Can not detect config for phpBB', null);
 
-            return;
+            return false;
         }
 
         $cms2cmsConfig['CMSType'] = 'Vbulletin';
@@ -3548,8 +3655,7 @@ class Bridge_Module_Cms_IPBoard_IPBoard extends Bridge_Module_Cms_Abstract
             || !isset($INFO['sql_pass']) || !isset($INFO['sql_database']) || !isset($INFO['sql_tbl_prefix'])
         ) {
             Bridge_Exception::ex('Can not detect config for IPBoard', null);
-
-            return;
+            return false;
         }
 
         $config['CMSType'] = 'IPBoard';
@@ -3641,7 +3747,7 @@ class Bridge_Module_Cms_MyBB_MyBB extends Bridge_Module_Cms_Abstract
         ) {
             Bridge_Exception::ex('Can not detect config for MyBB', null);
 
-            return;
+            return false;
         }
 
         $config['CMSType'] = 'MyBB';
@@ -3651,7 +3757,9 @@ class Bridge_Module_Cms_MyBB_MyBB extends Bridge_Module_Cms_Abstract
         $config['db']['dbname'] = $config['database']['database'];
         $config['db']['dbprefix'] = $config['database']['table_prefix'];
         $config['db']['driver'] = isset($config['database']['type']) ? $config['database']['type'] : 'mysqli';
+        /** @noinspection PhpUndefinedClassInspection */
         $myBB = new MyBB();
+        /** @noinspection PhpUndefinedFieldInspection */
         $config['version'] = $myBB->version;
 
         return $config;
@@ -3717,14 +3825,18 @@ class Bridge_Module_Cms_SMF_SMF extends Bridge_Module_Cms_Abstract
         ) {
             Bridge_Exception::ex('Can not detect config for SMF', null);
 
-            return;
+            return false;
         }
 
         $config['CMSType'] = 'SMF';
         $config['db']['host'] = $db_server;
+        /** @noinspection PhpUndefinedVariableInspection */
         $config['db']['user'] = $db_user;
+        /** @noinspection PhpUndefinedVariableInspection */
         $config['db']['password'] = $db_passwd;
+        /** @noinspection PhpUndefinedVariableInspection */
         $config['db']['dbname'] = $db_name;
+        /** @noinspection PhpUndefinedVariableInspection */
         $config['db']['dbprefix'] = $db_prefix;
         $config['db']['driver'] = isset($db_type) ? $db_type : 'mysqli';
         if ($versionConfig) {
@@ -3811,7 +3923,7 @@ class Bridge_Module_Cms_b2evolution_b2evolution extends Bridge_Module_Cms_Abstra
         ) {
             Bridge_Exception::ex('Can not detect config for b2evolution', null);
 
-            return;
+            return false;
         }
 
         $config['CMSType'] = 'B2evolution';
@@ -3819,8 +3931,10 @@ class Bridge_Module_Cms_b2evolution_b2evolution extends Bridge_Module_Cms_Abstra
         $config['db']['user'] = $db_config['user'];
         $config['db']['password'] = $db_config['password'];
         $config['db']['dbname'] = $db_config['name'];
+        /** @noinspection PhpUndefinedVariableInspection */
         $config['db']['dbprefix'] = $tableprefix;
         $config['db']['driver'] = 'mysql';
+        /** @noinspection PhpUndefinedVariableInspection */
         $config['version'] = $app_version;
 
         return $config;
@@ -3917,16 +4031,21 @@ class Bridge_Module_Cms_e107_e107 extends Bridge_Module_Cms_Abstract
         ) {
             Bridge_Exception::ex('Can not detect config for e107', null);
 
-            return;
+            return false;
         }
 
         $config['CMSType'] = 'E107';
         $config['db']['host'] = $mySQLserver;
+        /** @noinspection PhpUndefinedVariableInspection */
         $config['db']['user'] = $mySQLuser;
+        /** @noinspection PhpUndefinedVariableInspection */
         $config['db']['password'] = $mySQLpassword;
+        /** @noinspection PhpUndefinedVariableInspection */
         $config['db']['dbname'] = $mySQLdefaultdb;
+        /** @noinspection PhpUndefinedVariableInspection */
         $config['db']['dbprefix'] = $mySQLprefix;
         $config['db']['driver'] = 'mysql';
+        /** @noinspection PhpUndefinedVariableInspection */
         $config['version'] = $e107info['e107_version'];
 
         return $config;
