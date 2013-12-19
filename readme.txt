@@ -3,7 +3,7 @@ Contributors: cms2cms
 Tags: drupal to wordpress, drupal to wordpress mirgation, convert drupal to wordpress, migrate drupal to wordpress
 Requires at least: 3.0.0
 Tested up to: 3.8
-Stable tag: 2.1.0
+Stable tag: 3.0.9
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
