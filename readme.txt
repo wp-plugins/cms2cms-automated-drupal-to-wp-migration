@@ -3,13 +3,14 @@ Contributors: cms2cms
 Tags: drupal to wordpress, drupal to wordpress mirgation, convert drupal to wordpress, migrate drupal to wordpress
 Requires at least: 3.0.0
 Tested up to: 3.8
-Stable tag: 3.0.9
+Stable tag: 3.6.0
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
 This plugin is developed to help you move your site content from Drupal to WordPress easily and very fast in just a few mouse clicks - no coding skills needed.
 
 == Description ==
+
 This plugin is developed to help you move your site content from Drupal to WordPress easily and very fast in just a few mouse clicks - no coding skills needed.
 
 = The following content items can be migrated from Drupal to WordPress with CMS2CMS =
@@ -57,6 +58,7 @@ Find more info here: http://www.cms2cms.com/supported-cms/drupal-to-wordpress-mi
 1. You’ll be redirected to CMS2CMS website in order to complete your migration
 
 == Frequently Asked Questions ==
+
 = Your website is unreachable =
 If your website cannot be reached, pay attention to the following points:
 1. Make sure your site is available online at the moment.
