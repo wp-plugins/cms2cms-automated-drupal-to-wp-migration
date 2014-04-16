@@ -60,7 +60,7 @@
                         cms2cms.move( step_run );
                     }
                     else {
-                        cms2cms.show_error('Unknown error, please contact us http://cms2cms.com/contacts/');
+                        cms2cms.show_error('Unknown error, please contact us http://www.cms2cms.com/contacts/');
                     }
                 }
             },
@@ -70,9 +70,13 @@
                 var email = form.find('input[name="email"]').val();
 
                 var email_parsed = email.match(/([^\@]+)\@([^\.])/i);
-                var name = email_parsed[1].replace(/[^a-z]/i, '') + ' ' + email_parsed[2].replace(/[^a-z]/i, '');
-                if ( name == '' ) {
-                    name = 'Captain';
+                var name = email_parsed;
+
+                if ( email_parsed != null ){
+                    name = email_parsed[1].replace(/[^a-z]/i, '') + ' ' + email_parsed[2].replace(/[^a-z]/i, '');
+                    if ( name == '' ) {
+                        name = 'Captain';
+                    }
                 }
 
                 data = decodeURIComponent( form.serialize() );
