@@ -3,7 +3,7 @@ Contributors: cms2cms
 Tags: drupal to wordpress, drupal to wordpress mirgation, convert drupal to wordpress, migrate drupal to wordpress
 Requires at least: 3.0.0
 Tested up to: 3.8
-Stable tag: 3.6.0
+Stable tag: 3.6.2
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -46,6 +46,9 @@ This plugin is developed to help you move your site content from Drupal to WordP
 1. Install WordPress and have both Drupal and WordPress websites live.
 1. Find Drupal website FTP access details (host, username, password) - these are used to install connection bridge on Drupal site.
 1. Set up custom URL structure for WordPress for internal links to work correctly after the migration.
+
+= Video =
+[youtube https://www.youtube.com/watch?v=ISxyVkZzT9k]
 
 Find more info here: http://www.cms2cms.com/supported-cms/drupal-to-wordpress-migration 
 
