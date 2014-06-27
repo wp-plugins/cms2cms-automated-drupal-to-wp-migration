@@ -1,6 +1,6 @@
 ﻿=== CMS2CMS: Automated Drupal to WordPress Migration  ===
 Contributors: cms2cms
-Tags: drupal to wordpress, drupal to wordpress mirgation, convert drupal to wordpress, migrate drupal to wordpress
+Tags: drupal to wordpress, drupal to wordpress migration, convert drupal to wordpress, migrate drupal to wordpress, comments, images, posts, plugin
 Requires at least: 3.0.0
 Tested up to: 3.9.1
 Stable tag: 3.6.2
