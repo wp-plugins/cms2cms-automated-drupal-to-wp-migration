@@ -52,6 +52,8 @@ This plugin is developed to help you move your site content from Drupal to WordP
 
 Find more info here: http://www.cms2cms.com/supported-cms/drupal-to-wordpress-migration 
 
+= Note. =  Tags migrate to WordPress as categories
+
 == Installation ==
 
 1. Download the plugin zip file
