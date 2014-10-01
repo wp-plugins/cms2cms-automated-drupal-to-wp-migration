@@ -2,7 +2,7 @@
 Contributors: cms2cms
 Tags: drupal to wordpress, drupal to wordpress migration, convert drupal to wordpress, migrate drupal to wordpress, comments, images, posts, plugin
 Requires at least: 3.0.0
-Tested up to: 3.9.1
+Tested up to: 4.0
 Stable tag: 3.6.2
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -30,7 +30,7 @@ This plugin is developed to help you move your site content from Drupal to WordP
 * custom fields
 
 *Supported Drupal versions:* 5.x, 6.x, 7.x
-*Supported WordPress versions:* 3.x (new software versions are constantly being added).
+*Supported WordPress versions:* 4.x (new software versions are constantly being added).
 
 = Features of Automated Migration =
 - **it’s simple** - no need for coding skills to complete it.
@@ -53,7 +53,7 @@ This plugin is developed to help you move your site content from Drupal to WordP
 = Video =
 [youtube https://www.youtube.com/watch?v=ISxyVkZzT9k]
 
-Find more info here: http://www.cms2cms.com/supported-cms/drupal-to-wordpress-migration 
+Find more info here: http://www.cms2cms.com/supported-cms/drupal-to-wordpress-migration?utm_source=Drupal&utm_medium=Link&utm_campaign=WordPress_plugins
 
 **Note.** *Tags migrate to WordPress as categories*
 
