@@ -14,7 +14,7 @@ This plugin is developed to help you move your site content from Drupal to WordP
 This plugin is developed to help you move your site content from Drupal to WordPress easily and very fast in just a few mouse clicks - no coding skills needed.
 
 * *There is Free Demo available (migration of limited number of pages).*
-* *Full Migration starts from $49.*
+* *Full Migration starts from $39.*
 
 = The following content items can be migrated from Drupal to WordPress with CMS2CMS =
 * articles
