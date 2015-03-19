@@ -42,6 +42,7 @@ This plugin is developed to help you move your site content from Drupal to WordP
 - migration of SEO aliases.
 - permanent 301 redirects from Drupal to WordPress URLs
 - delete data from WordPress website before migration
+- Passwords migration (available for Drupal 5.x-6.x)
 
 **Note.** *This plugin sets up the connection bridge on your WordPress website, which is needed to enable data interaction between your Drupal and WordPress websites. Upon activation, you’ll be redirected to CMS2CMS site to complete the migration.*
 
